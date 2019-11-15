@@ -11,20 +11,19 @@ import (
 	"time"
 )
 
-type img struct {
-	title string
-	url   string
-	fan   string
-	date  string
-	kind  string
+type set struct {
+	page   int
+	search string
 }
 
 var (
-	imgs []img
+	setting set
 
 	url string
 
 	count = 0
+
+	input string
 )
 
 func GetContents(url string) (string, error) {
@@ -57,19 +56,32 @@ func GetContents(url string) (string, error) {
 
 func main() {
 	fmt.Println("欢迎使用我的爬虫小软件，XX一时爽，一直XX一直爽")
-	ch := make(chan int, 5)
+	for {
+		fmt.Println("今天你要爬几页呢？")
+		_, err := fmt.Scanln(&input)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			setting.page, err = strconv.Atoi(input)
+			if err == nil {
+				break
+			}
+		}
+		fmt.Println("给爷爬，好好输入")
+	}
+	ch := make(chan int, setting.page)
 	err := os.MkdirAll("学习资料/All", os.ModePerm)
 	if err != nil {
 		fmt.Println("创建文件出错")
 		return
 	}
-	for i := 1; i < 2; i++ {
+	for i := 1; i < setting.page+1; i++ {
 		url = "https://avmask.com/cn/page/" + strconv.Itoa(i)
 		go download(url, ch)
 	}
 	for {
 		count += <-ch
-		if count == 4 {
+		if count == setting.page {
 			break
 		}
 	}
@@ -82,7 +94,6 @@ func main() {
 
 }
 
-//https://jp.netcdn.space/digital/video/urvrsp00030/urvrsp00030ps.jpg
 func download(url string, ch chan int) {
 	//var setu img
 	d, err := goquery.NewDocument(url)
@@ -114,35 +125,7 @@ func download(url string, ch chan int) {
 			}
 			time.Sleep(2 * time.Second)
 		})
-		//title:=d1.Find("h3").Text()
-		//setu.url, _ = selection.Find("img").Attr("src")             //图片地址
-		//setu.title, _ = selection.Find("img").Attr("title")         //标题
-		//setu.fan = selection.Find("span date:first-of-type").Text() //番号
-		//setu.date = selection.Find("span date:last-of-type").Text() //日期
-		//os.Mkdir(setu.title+"-"+setu.fan+"-"+setu.date,)
-		//src, _ := selection.Attr("src")
-		//title, _ := selection.Attr("title")
-		//res, err := http.Get(src)
-		//if err != nil {
-		//	fmt.Println("链接出错")
-		//	return
-		//}
-		//f, err := os.Create(title + ".jpg")
-		//if err != nil {
-		//	fmt.Println("创造文件" + title + ".jpg出错")
-		//	return
-		//}
-		//_, err = io.Copy(f, res.Body)
-		//if err == nil {
-		//	fmt.Println(title + "下载完成")
-		//}
-
 	})
-	//d.Find("span date:first-of-type").Each(func(i int, selection *goquery.Selection) {
-	//	os.Mkdir("abc", os.ModePerm)
-	//	fmt.Println("番号是：" + selection.Text())
-	//	fmt.Println("日期是" + selection.Next().Text())
-	//})
 	ch <- 1
 }
 
